@@ -1,0 +1,1254 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dave's Fry Catch</title>
+    <style>
+      :root {
+        --red: #f12d20;
+        --dark-red: #9e100b;
+        --yellow: #ffd532;
+        --cream: #fff3d8;
+        --ink: #0b0908;
+        --blue: #7cf6ff;
+      }
+
+      * { box-sizing: border-box; }
+
+      html, body {
+        min-width: 900px;
+        min-height: 100%;
+        margin: 0;
+        overflow: hidden;
+        background: #050403;
+        color: var(--cream);
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      body {
+        display: grid;
+        min-height: 100vh;
+        place-items: center;
+        padding: 18px;
+        background:
+          radial-gradient(circle at 50% 5%, rgba(241,45,32,.24), transparent 38%),
+          repeating-linear-gradient(45deg, rgba(255,255,255,.018) 0 2px, transparent 2px 12px),
+          #050403;
+      }
+
+      button { font: inherit; }
+      button:focus-visible {
+        outline: 4px solid var(--blue);
+        outline-offset: 4px;
+      }
+
+      .cabinet {
+        position: relative;
+        width: min(96vw, 1280px);
+        max-height: calc(100vh - 36px);
+        aspect-ratio: 16 / 9;
+        overflow: hidden;
+        border: 4px solid #39231d;
+        border-radius: 18px;
+        background: #140d0a;
+        box-shadow:
+          0 0 0 2px #050403,
+          0 0 0 8px #8f160e,
+          0 0 0 11px #211612,
+          0 35px 100px #000,
+          0 0 80px rgba(241,45,32,.2);
+      }
+
+      .cabinet::after {
+        position: absolute;
+        z-index: 20;
+        inset: 0;
+        border: 1px solid rgba(255,255,255,.12);
+        border-radius: 13px;
+        content: "";
+        pointer-events: none;
+      }
+
+      canvas {
+        position: absolute;
+        inset: 0;
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+
+      .screen {
+        position: absolute;
+        z-index: 10;
+        inset: 0;
+      }
+
+      .hidden { display: none !important; }
+
+      .menu {
+        display: grid;
+        grid-template-columns: 1.15fr .85fr;
+        gap: 4%;
+        align-items: center;
+        padding: 6.5%;
+        background:
+          linear-gradient(90deg, rgba(8,6,5,.97), rgba(8,6,5,.78) 54%, rgba(8,6,5,.4)),
+          repeating-linear-gradient(135deg, transparent 0 36px, rgba(255,255,255,.025) 36px 38px);
+      }
+
+      .menu::before {
+        position: absolute;
+        right: -8%;
+        bottom: -32%;
+        width: 62%;
+        aspect-ratio: 1;
+        border: 80px solid rgba(241,45,32,.08);
+        border-radius: 50%;
+        content: "";
+      }
+
+      .kicker, .eyebrow {
+        color: var(--yellow);
+        font-size: clamp(9px, .8vw, 13px);
+        font-weight: 900;
+        letter-spacing: .19em;
+        text-transform: uppercase;
+      }
+
+      .kicker::before {
+        display: inline-block;
+        width: 56px;
+        height: 12px;
+        margin-right: 10px;
+        vertical-align: -2px;
+        content: "";
+        background:
+          conic-gradient(from 90deg, var(--cream) 25%, transparent 0 50%, var(--cream) 0 75%, transparent 0)
+          0 0 / 12px 12px;
+      }
+
+      h1, h2, p { margin-top: 0; }
+
+      h1 {
+        display: flex;
+        flex-direction: column;
+        margin: 20px 0 18px;
+        font-family: Impact, "Arial Black", sans-serif;
+        font-size: clamp(74px, 8vw, 128px);
+        font-weight: 400;
+        letter-spacing: -.05em;
+        line-height: .72;
+        text-transform: uppercase;
+        filter: drop-shadow(7px 8px 0 #000);
+        transform: rotate(-2deg);
+      }
+
+      h1 span:first-child {
+        width: max-content;
+        padding: .07em .13em .1em;
+        color: #fff;
+        background: var(--red);
+        box-shadow: 7px 7px 0 #100b09;
+        transform: skew(-5deg);
+      }
+
+      h1 span:last-child {
+        width: max-content;
+        margin-top: .05em;
+        color: var(--yellow);
+        -webkit-text-stroke: 3px #130b08;
+        paint-order: stroke fill;
+      }
+
+      .tagline {
+        max-width: 460px;
+        margin-bottom: 25px;
+        color: rgba(255,243,216,.7);
+        font-size: clamp(15px, 1.35vw, 22px);
+        font-weight: 800;
+        line-height: 1.2;
+        text-transform: uppercase;
+      }
+
+      .tagline b { color: #fff; }
+
+      .primary, .secondary {
+        min-height: 54px;
+        border: 0;
+        border-radius: 3px;
+        padding: 12px 24px;
+        cursor: pointer;
+        font-family: Impact, "Arial Black", sans-serif;
+        font-size: clamp(18px, 1.45vw, 24px);
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        transition: transform .13s ease, box-shadow .13s ease;
+      }
+
+      .primary {
+        color: #100906;
+        background: var(--yellow);
+        box-shadow: 6px 6px 0 var(--red), 9px 9px 0 #080504;
+      }
+
+      .primary:hover {
+        transform: translate(-2px,-2px) rotate(-.5deg);
+        box-shadow: 8px 8px 0 var(--red), 12px 12px 0 #080504;
+      }
+
+      .primary:active {
+        transform: translate(4px,4px);
+        box-shadow: 2px 2px 0 var(--red), 4px 4px 0 #080504;
+      }
+
+      .secondary {
+        border: 2px solid rgba(255,255,255,.2);
+        color: #fff;
+        background: rgba(255,255,255,.05);
+      }
+
+      .controls {
+        display: flex;
+        gap: 20px;
+        margin-top: 30px;
+      }
+
+      .controls div {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: rgba(255,255,255,.5);
+        font-size: 10px;
+        font-weight: 900;
+        letter-spacing: .1em;
+      }
+
+      kbd {
+        display: grid;
+        min-width: 29px;
+        height: 29px;
+        place-items: center;
+        border: 1px solid rgba(255,255,255,.25);
+        border-radius: 4px;
+        color: #fff;
+        background: rgba(255,255,255,.08);
+        box-shadow: 0 3px 0 rgba(255,255,255,.12);
+        font-size: 10px;
+      }
+
+      .menu-card {
+        position: relative;
+        z-index: 2;
+        border: 1px solid rgba(255,255,255,.15);
+        border-top: 6px solid var(--red);
+        padding: 7%;
+        background: rgba(8,7,6,.86);
+        box-shadow: 15px 18px 0 rgba(0,0,0,.45);
+        transform: rotate(1deg);
+      }
+
+      .menu-card h3 {
+        margin: 0 0 18px;
+        font-family: Impact, sans-serif;
+        font-size: clamp(24px, 2.3vw, 38px);
+        font-weight: 400;
+        letter-spacing: .04em;
+      }
+
+      .goal-meter {
+        position: relative;
+        height: 18px;
+        margin: 12px 0 24px;
+        overflow: hidden;
+        border: 2px solid rgba(255,255,255,.2);
+        background: #15100e;
+      }
+
+      .goal-meter span {
+        display: block;
+        width: 100%;
+        height: 100%;
+        background:
+          repeating-linear-gradient(90deg, var(--yellow) 0 18px, #ffb51d 18px 20px);
+      }
+
+      .goal-copy {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+      }
+
+      .goal-copy small {
+        color: rgba(255,255,255,.45);
+        font-weight: 900;
+        letter-spacing: .12em;
+      }
+
+      .goal-copy strong {
+        color: var(--yellow);
+        font-family: Impact, sans-serif;
+        font-size: clamp(34px, 3.5vw, 56px);
+        font-weight: 400;
+      }
+
+      .how-list {
+        display: grid;
+        gap: 12px;
+        margin: 18px 0 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .how-list li {
+        display: grid;
+        grid-template-columns: 42px 1fr;
+        align-items: center;
+        gap: 12px;
+        color: rgba(255,255,255,.7);
+        font-size: clamp(10px, .85vw, 14px);
+        font-weight: 800;
+        text-transform: uppercase;
+      }
+
+      .mini-icon {
+        display: grid;
+        width: 38px;
+        aspect-ratio: 1;
+        place-items: center;
+        border: 2px solid #111;
+        border-radius: 50%;
+        color: #111;
+        background: var(--yellow);
+        box-shadow: 3px 3px 0 #000;
+        font-size: 20px;
+      }
+
+      .mini-icon.danger {
+        color: #fff;
+        background: var(--red);
+      }
+
+      .best {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 22px;
+        border-top: 1px solid rgba(255,255,255,.12);
+        padding-top: 14px;
+        color: rgba(255,255,255,.48);
+        font-size: 10px;
+        font-weight: 900;
+        letter-spacing: .12em;
+      }
+
+      .best b {
+        color: #fff;
+        font-size: 16px;
+      }
+
+      .hud {
+        position: absolute;
+        z-index: 6;
+        inset: 0;
+        pointer-events: none;
+      }
+
+      .stat {
+        position: absolute;
+        top: 3.5%;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .stat small, .target small, .lives small {
+        color: rgba(255,255,255,.55);
+        font-size: clamp(7px, .58vw, 10px);
+        font-weight: 900;
+        letter-spacing: .16em;
+      }
+
+      .stat strong {
+        font-family: Impact, sans-serif;
+        font-size: clamp(34px, 3.2vw, 52px);
+        font-weight: 400;
+        letter-spacing: .04em;
+        line-height: .92;
+        text-shadow: 4px 4px 0 #000;
+      }
+
+      .score { left: 3.2%; }
+      .combo {
+        left: 18%;
+        border-left: 2px solid rgba(255,255,255,.16);
+        padding-left: 18px;
+      }
+      .combo strong { color: var(--yellow); }
+
+      .target {
+        position: absolute;
+        top: 3.4%;
+        left: 50%;
+        min-width: 260px;
+        border: 2px solid rgba(255,255,255,.7);
+        padding: 8px 14px;
+        color: #111;
+        background: var(--yellow);
+        box-shadow: 5px 5px 0 rgba(0,0,0,.65);
+        text-align: center;
+        transform: translateX(-50%) rotate(-1deg);
+      }
+
+      .target small {
+        display: block;
+        color: rgba(0,0,0,.58);
+      }
+
+      .target-track {
+        height: 9px;
+        margin-top: 5px;
+        overflow: hidden;
+        border: 1px solid rgba(0,0,0,.35);
+        background: rgba(0,0,0,.18);
+      }
+
+      .target-track span {
+        display: block;
+        width: 0%;
+        height: 100%;
+        background: var(--red);
+        transition: width .16s ease;
+      }
+
+      .lives {
+        position: absolute;
+        top: 3.8%;
+        right: 3.2%;
+        text-align: right;
+      }
+
+      .hearts {
+        display: flex;
+        gap: 5px;
+        margin-top: 3px;
+      }
+
+      .heart {
+        color: var(--red);
+        font-size: clamp(28px, 2.8vw, 45px);
+        line-height: .8;
+        text-shadow: 3px 3px 0 #000;
+        transition: opacity .2s, transform .2s;
+      }
+
+      .heart.lost {
+        opacity: .16;
+        filter: grayscale(1);
+        transform: scale(.75);
+      }
+
+      .power {
+        position: absolute;
+        top: 15%;
+        left: 2.7%;
+        display: none;
+        border-left: 5px solid var(--blue);
+        padding: 8px 12px;
+        color: #fff;
+        background: rgba(3,10,11,.8);
+        box-shadow: 5px 6px 0 rgba(0,0,0,.45);
+        font-size: 10px;
+        font-weight: 900;
+        letter-spacing: .1em;
+      }
+
+      .power.active { display: block; }
+      .power b { color: var(--blue); }
+
+      .overlay {
+        display: grid;
+        place-items: center;
+        padding: 5%;
+        background: rgba(4,3,3,.76);
+        backdrop-filter: blur(6px);
+      }
+
+      .result-card {
+        display: grid;
+        width: min(76%, 860px);
+        grid-template-columns: 1.25fr .75fr;
+        border: 1px solid rgba(255,255,255,.17);
+        border-top: 8px solid var(--red);
+        background: rgba(12,9,8,.96);
+        box-shadow: 20px 24px 0 rgba(0,0,0,.55), 0 0 80px rgba(241,45,32,.18);
+      }
+
+      .result-copy { padding: 8%; }
+
+      .result-card h2 {
+        margin: 8px 0 16px;
+        color: var(--yellow);
+        font-family: Impact, sans-serif;
+        font-size: clamp(58px, 7vw, 110px);
+        font-weight: 400;
+        letter-spacing: -.025em;
+        line-height: .84;
+        text-shadow: 7px 8px 0 #000;
+      }
+
+      .result-card p {
+        max-width: 520px;
+        color: rgba(255,255,255,.68);
+        font-size: clamp(13px, 1.1vw, 18px);
+        font-weight: 700;
+        line-height: 1.45;
+      }
+
+      .result-score {
+        display: inline-flex;
+        min-width: 200px;
+        flex-direction: column;
+        border-left: 5px solid var(--yellow);
+        margin: 2px 0 24px;
+        padding-left: 15px;
+      }
+
+      .result-score small {
+        color: rgba(255,255,255,.45);
+        font-size: 9px;
+        font-weight: 900;
+        letter-spacing: .15em;
+      }
+
+      .result-score strong {
+        font-family: Impact, sans-serif;
+        font-size: clamp(40px, 4.4vw, 70px);
+        font-weight: 400;
+        line-height: 1;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+      }
+
+      .result-art {
+        position: relative;
+        display: grid;
+        min-height: 360px;
+        place-items: center;
+        overflow: hidden;
+        background:
+          radial-gradient(circle, rgba(255,213,50,.22), transparent 54%),
+          repeating-conic-gradient(from 0deg, rgba(241,45,32,.18) 0 8deg, transparent 8deg 16deg);
+      }
+
+      .result-art::before {
+        display: grid;
+        width: 68%;
+        aspect-ratio: 1;
+        place-items: center;
+        border: 8px solid #111;
+        border-radius: 50%;
+        color: #111;
+        background: var(--yellow);
+        box-shadow: 12px 14px 0 rgba(0,0,0,.55);
+        content: "✓";
+        font-family: Impact, sans-serif;
+        font-size: clamp(90px, 11vw, 170px);
+        transform: rotate(-8deg);
+      }
+
+      #lose-screen .result-art::before {
+        color: #fff;
+        background: var(--red);
+        content: "×";
+      }
+
+      .toast {
+        position: absolute;
+        z-index: 8;
+        bottom: 4%;
+        left: 50%;
+        border: 2px solid rgba(255,255,255,.24);
+        padding: 8px 14px;
+        color: rgba(255,255,255,.65);
+        background: rgba(0,0,0,.55);
+        font-size: 9px;
+        font-weight: 900;
+        letter-spacing: .12em;
+        transform: translateX(-50%);
+        pointer-events: none;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+          transition-duration: .001ms !important;
+          animation-duration: .001ms !important;
+          animation-iteration-count: 1 !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="cabinet" aria-label="Dave's Fry Catch arcade game">
+      <canvas id="game" width="960" height="540" aria-label="Falling fry game field"></canvas>
+
+      <section id="menu-screen" class="screen menu">
+        <div>
+          <div class="kicker">A hot chicken arcade</div>
+          <h1><span>Dave's</span><span>Fry Catch</span></h1>
+          <p class="tagline">Catch the crunch. Build the heat. <b>Dodge the Reaper.</b></p>
+          <button class="primary" id="start-button">Start Fryin' &nbsp; ↵</button>
+          <div class="controls" aria-label="Game controls">
+            <div><kbd>A</kbd><kbd>D</kbd> MOVE</div>
+            <div><kbd>←</kbd><kbd>→</kbd> MOVE</div>
+            <div><kbd>M</kbd> SOUND</div>
+          </div>
+        </div>
+        <aside class="menu-card">
+          <div class="goal-copy">
+            <div>
+              <div class="eyebrow">Your mission</div>
+              <h3>SURVIVE THE RUSH</h3>
+            </div>
+              <strong>∞</strong>
+          </div>
+          <div class="goal-meter"><span></span></div>
+          <ul class="how-list">
+            <li><span class="mini-icon">＋</span><span>Catch seasoned fries for points</span></li>
+            <li><span class="mini-icon">★</span><span>Golden fries score a 50-point bonus</span></li>
+            <li><span class="mini-icon danger">!</span><span>Miss 3 fries or catch a Reaper and you're out</span></li>
+            <li><span class="mini-icon">S</span><span>Sauce pulls nearby fries into the bag</span></li>
+          </ul>
+          <div class="best"><span>BEST ON THIS MACHINE</span><b id="best-score">0</b></div>
+        </aside>
+      </section>
+
+      <section id="hud" class="hud hidden" aria-label="Game status">
+        <div class="stat score"><small>SCORE</small><strong id="score">0</strong></div>
+        <div class="stat combo"><small>STREAK</small><strong id="combo">1×</strong></div>
+        <div class="target">
+          <small>ENDLESS RUN · HEAT INTENSITY</small>
+          <div class="target-track"><span id="target-fill"></span></div>
+        </div>
+        <div class="lives">
+          <small>LIVES</small>
+          <div class="hearts">
+            <span class="heart">♥</span><span class="heart">♥</span><span class="heart">♥</span>
+          </div>
+        </div>
+        <div id="power" class="power">SAUCE MAGNET · <b id="power-time">5.0s</b></div>
+      </section>
+
+      <section id="lose-screen" class="screen overlay hidden">
+        <div class="result-card">
+          <div class="result-copy">
+            <div class="eyebrow">The bag is empty</div>
+            <h2>Game Over</h2>
+            <p>So close. Find your rhythm, keep the bag under the fries, and turn up the heat.</p>
+            <div class="result-score"><small>FINAL SCORE</small><strong id="lose-score">0</strong></div>
+            <div class="actions">
+              <button class="primary restart">Run It Back</button>
+              <button class="secondary home">Main Menu</button>
+            </div>
+          </div>
+          <div class="result-art" aria-hidden="true"></div>
+        </div>
+      </section>
+
+      <div id="toast" class="toast">A / D OR ARROW KEYS TO MOVE · M TO MUTE</div>
+    </main>
+
+    <script>
+      (() => {
+        "use strict";
+
+        const canvas = document.getElementById("game");
+        const ctx = canvas.getContext("2d");
+        const W = canvas.width;
+        const H = canvas.height;
+        const MAX_DIFFICULTY_SCORE = 600;
+        const menu = document.getElementById("menu-screen");
+        const hud = document.getElementById("hud");
+        const loseScreen = document.getElementById("lose-screen");
+        const scoreEl = document.getElementById("score");
+        const comboEl = document.getElementById("combo");
+        const fillEl = document.getElementById("target-fill");
+        const bestEl = document.getElementById("best-score");
+        const powerEl = document.getElementById("power");
+        const powerTimeEl = document.getElementById("power-time");
+        const hearts = [...document.querySelectorAll(".heart")];
+        const prefersReducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+        const keys = { left: false, right: false };
+
+        let state = "menu";
+        let score = 0;
+        let streak = 0;
+        let lives = 3;
+        let bagX = W / 2;
+        let bagVelocity = 0;
+        let items = [];
+        let particles = [];
+        let popups = [];
+        let lastTime = 0;
+        let spawnClock = 0;
+        let sauceUntil = 0;
+        let gameTime = 0;
+        let shake = 0;
+        let catchPulse = 0;
+        let audio = null;
+        let muted = localStorage.getItem("daves-fry-mvp-muted") === "true";
+        let best = Number(localStorage.getItem("daves-fry-mvp-best") || 0);
+        bestEl.textContent = best.toLocaleString();
+
+        const graffiti = Array.from({ length: 34 }, (_, i) => ({
+          x: (i * 173 + 47) % W,
+          y: (i * 97 + 83) % H,
+          r: 6 + ((i * 19) % 42),
+          color: ["#f12d20", "#ffd532", "#f6ead2", "#164a72"][i % 4],
+          alpha: .035 + (i % 3) * .018
+        }));
+
+        function ensureAudio() {
+          if (!audio) {
+            const AC = window.AudioContext || window.webkitAudioContext;
+            if (!AC) return null;
+            const context = new AC();
+            const master = context.createGain();
+            master.gain.value = muted ? 0 : .08;
+            master.connect(context.destination);
+            audio = { context, master };
+          }
+          if (audio.context.state === "suspended") audio.context.resume();
+          return audio;
+        }
+
+        function tone(freq, duration = .1, type = "square", volume = .12, delay = 0) {
+          if (muted) return;
+          const a = ensureAudio();
+          if (!a) return;
+          const start = a.context.currentTime + delay;
+          const osc = a.context.createOscillator();
+          const gain = a.context.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, start);
+          gain.gain.setValueAtTime(.0001, start);
+          gain.gain.exponentialRampToValueAtTime(volume, start + .012);
+          gain.gain.exponentialRampToValueAtTime(.0001, start + duration);
+          osc.connect(gain);
+          gain.connect(a.master);
+          osc.start(start);
+          osc.stop(start + duration + .03);
+        }
+
+        function sound(name) {
+          if (name === "catch") {
+            tone(520, .07); tone(780, .08, "square", .08, .035);
+          } else if (name === "gold") {
+            tone(660, .16, "triangle"); tone(880, .18, "triangle", .12, .07); tone(1100, .2, "triangle", .1, .14);
+          } else if (name === "hurt") {
+            tone(150, .28, "sawtooth", .18); tone(90, .34, "square", .1, .05);
+          } else if (name === "power") {
+            tone(330, .18, "sawtooth", .1); tone(660, .25, "triangle", .14, .07);
+          } else if (name === "win") {
+            [330, 440, 550, 660, 880].forEach((f, i) => tone(f, .24, "square", .11, i * .09));
+          }
+        }
+
+        function multiplier() {
+          if (streak >= 12) return 3;
+          if (streak >= 5) return 2;
+          return 1;
+        }
+
+        function updateHud() {
+          scoreEl.textContent = score.toLocaleString();
+          comboEl.textContent = multiplier() + "×";
+          fillEl.style.width = Math.min(100, (score / MAX_DIFFICULTY_SCORE) * 100) + "%";
+          hearts.forEach((heart, index) => heart.classList.toggle("lost", index >= lives));
+          const left = sauceUntil - gameTime;
+          powerEl.classList.toggle("active", left > 0);
+          powerTimeEl.textContent = Math.max(0, left).toFixed(1) + "s";
+        }
+
+        function resetGame() {
+          score = 0;
+          streak = 0;
+          lives = 3;
+          bagX = W / 2;
+          bagVelocity = 0;
+          items = [];
+          particles = [];
+          popups = [];
+          spawnClock = .6;
+          sauceUntil = 0;
+          gameTime = 0;
+          shake = 0;
+          catchPulse = 0;
+          state = "playing";
+          menu.classList.add("hidden");
+          loseScreen.classList.add("hidden");
+          hud.classList.remove("hidden");
+          updateHud();
+          ensureAudio();
+          tone(220, .12); tone(330, .12, "square", .12, .07); tone(440, .14, "square", .12, .14);
+        }
+
+        function showMenu() {
+          state = "menu";
+          hud.classList.add("hidden");
+          loseScreen.classList.add("hidden");
+          menu.classList.remove("hidden");
+          bestEl.textContent = best.toLocaleString();
+        }
+
+        function finish() {
+          if (state !== "playing") return;
+          state = "lost";
+          best = Math.max(best, score);
+          localStorage.setItem("daves-fry-mvp-best", best);
+          hud.classList.add("hidden");
+          document.getElementById("lose-score").textContent = score.toLocaleString();
+          loseScreen.classList.remove("hidden");
+          sound("hurt");
+        }
+
+        function spawn() {
+          const difficulty = Math.min(1, score / MAX_DIFFICULTY_SCORE);
+          const roll = Math.random();
+          let type = "fry";
+          if (roll < .08) type = "gold";
+          else if (roll < .15 && score >= 50) type = "sauce";
+          else if (roll > .91 && score >= 80) type = "pepper";
+          const size = type === "fry" || type === "gold" ? 35 : 43;
+          items.push({
+            type,
+            x: 65 + Math.random() * (W - 130),
+            y: -55,
+            size,
+            speed: 145 + difficulty * 125 + Math.random() * 24,
+            drift: score >= 100 ? (Math.random() - .5) * 42 : 0,
+            spin: (Math.random() - .5) * 1.6,
+            rotation: (Math.random() - .5) * .5,
+            warning: .28
+          });
+        }
+
+        function burst(x, y, color, count = 13) {
+          for (let i = 0; i < count; i++) {
+            const a = Math.random() * Math.PI * 2;
+            const s = 60 + Math.random() * 180;
+            particles.push({
+              x, y,
+              vx: Math.cos(a) * s,
+              vy: Math.sin(a) * s - 60,
+              life: .4 + Math.random() * .45,
+              max: .85,
+              color,
+              size: 2 + Math.random() * 5
+            });
+          }
+        }
+
+        function popup(x, y, text, color = "#ffd532", size = 24) {
+          popups.push({ x, y, text, color, size, life: .85, max: .85 });
+        }
+
+        function loseLife(x, pepper = false) {
+          lives--;
+          streak = 0;
+          shake = prefersReducedMotion ? 0 : .28;
+          burst(x, H - 80, "#f12d20", 22);
+          popup(x, H - 100, pepper ? "REAPER BURN!" : "FRY DOWN!", "#ff3c2d", 26);
+          sound("hurt");
+          updateHud();
+          if (lives <= 0) finish();
+        }
+
+        function collect(item) {
+          if (item.type === "pepper") {
+            loseLife(item.x, true);
+            return;
+          }
+          if (item.type === "sauce") {
+            sauceUntil = gameTime + 5;
+            popup(item.x, item.y, "SAUCE MAGNET!", "#7cf6ff", 25);
+            burst(item.x, item.y, "#7cf6ff", 22);
+            sound("power");
+            updateHud();
+            return;
+          }
+          streak++;
+          const points = item.type === "gold" ? 50 : 10 * multiplier();
+          score += points;
+          catchPulse = .18;
+          popup(item.x, item.y, item.type === "gold" ? "GOLDEN +" + points : "+" + points, item.type === "gold" ? "#fff28a" : "#ffd532");
+          burst(item.x, item.y, item.type === "gold" ? "#fff28a" : "#ffb21c", item.type === "gold" ? 25 : 13);
+          sound(item.type === "gold" ? "gold" : "catch");
+          updateHud();
+        }
+
+        function update(dt) {
+          gameTime += dt;
+          catchPulse = Math.max(0, catchPulse - dt);
+          shake = Math.max(0, shake - dt);
+          const direction = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
+          const target = direction * 580;
+          bagVelocity += (target - bagVelocity) * Math.min(1, dt * (direction ? 14 : 20));
+          bagX += bagVelocity * dt;
+          bagX = Math.max(76, Math.min(W - 76, bagX));
+
+          spawnClock -= dt;
+          if (spawnClock <= 0) {
+            spawn();
+            const pressure = Math.min(.28, (score / MAX_DIFFICULTY_SCORE) * .28);
+            spawnClock = .82 - pressure + Math.random() * .16;
+          }
+
+          const kept = [];
+          for (const item of items) {
+            if (item.warning > 0) {
+              item.warning -= dt;
+              kept.push(item);
+              continue;
+            }
+            if (sauceUntil > gameTime && item.type !== "pepper" && item.y > 130) {
+              item.x += (bagX - item.x) * Math.min(1, dt * 3.5);
+            }
+            item.x += item.drift * dt;
+            item.y += item.speed * dt;
+            item.rotation += item.spin * dt;
+            if (item.x < 35 || item.x > W - 35) item.drift *= -1;
+
+            const caught =
+              item.y + item.size * .45 >= H - 128 &&
+              item.y < H - 36 &&
+              Math.abs(item.x - bagX) < 84;
+            if (caught) {
+              collect(item);
+              continue;
+            }
+            if (item.y - item.size > H) {
+              if (item.type === "fry") loseLife(item.x);
+              continue;
+            }
+            kept.push(item);
+          }
+          items = kept;
+
+          particles.forEach(p => {
+            p.life -= dt;
+            p.x += p.vx * dt;
+            p.y += p.vy * dt;
+            p.vy += 380 * dt;
+            p.vx *= Math.pow(.2, dt);
+          });
+          particles = particles.filter(p => p.life > 0);
+          popups.forEach(p => { p.life -= dt; p.y -= 38 * dt; });
+          popups = popups.filter(p => p.life > 0);
+          updateHud();
+        }
+
+        function roundedRect(x, y, w, h, r) {
+          ctx.beginPath();
+          ctx.roundRect(x, y, w, h, r);
+        }
+
+        function drawBackground() {
+          const gradient = ctx.createLinearGradient(0, 0, 0, H);
+          gradient.addColorStop(0, "#22130d");
+          gradient.addColorStop(.56, "#100d0b");
+          gradient.addColorStop(1, "#080605");
+          ctx.fillStyle = gradient;
+          ctx.fillRect(0, 0, W, H);
+
+          ctx.save();
+          graffiti.forEach(g => {
+            ctx.globalAlpha = g.alpha;
+            ctx.fillStyle = g.color;
+            ctx.translate(g.x, g.y);
+            ctx.rotate((g.x + g.y) * .003);
+            ctx.fillRect(-g.r * 2.6, -g.r / 2, g.r * 5.2, g.r);
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+          });
+          ctx.restore();
+
+          ctx.globalAlpha = .12;
+          for (let x = 0; x < W; x += 48) {
+            ctx.fillStyle = (x / 48) % 2 ? "#fff3d8" : "#0a0807";
+            ctx.fillRect(x, H - 52, 24, 24);
+            ctx.fillRect(x + 24, H - 28, 24, 24);
+          }
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = "rgba(0,0,0,.35)";
+          ctx.fillRect(0, H - 22, W, 22);
+
+          const glow = ctx.createRadialGradient(W / 2, H, 20, W / 2, H, 440);
+          glow.addColorStop(0, "rgba(241,45,32,.25)");
+          glow.addColorStop(1, "rgba(241,45,32,0)");
+          ctx.fillStyle = glow;
+          ctx.fillRect(0, 0, W, H);
+        }
+
+        function drawFry(item) {
+          ctx.save();
+          ctx.translate(item.x, item.y);
+          ctx.rotate(item.rotation);
+          const gold = item.type === "gold";
+          const body = gold ? "#ffd943" : "#ef8b17";
+          const edge = gold ? "#ffb612" : "#a93c08";
+          const w = item.size * .52;
+          const h = item.size * 1.45;
+          ctx.shadowColor = "rgba(0,0,0,.55)";
+          ctx.shadowBlur = 10;
+          ctx.shadowOffsetY = 7;
+          roundedRect(-w / 2, -h / 2, w, h, w * .3);
+          ctx.fillStyle = body;
+          ctx.fill();
+          ctx.lineWidth = 3;
+          ctx.strokeStyle = edge;
+          ctx.stroke();
+          ctx.shadowColor = "transparent";
+          ctx.strokeStyle = gold ? "#fff082" : "#ffb42f";
+          ctx.lineWidth = 2;
+          for (let y = -h * .34; y < h * .38; y += h / 6) {
+            ctx.beginPath();
+            ctx.moveTo(-w * .42, y);
+            ctx.lineTo(w * .42, y + 2);
+            ctx.stroke();
+          }
+          ctx.fillStyle = gold ? "#fff7ab" : "#ffd35a";
+          for (let i = 0; i < 8; i++) {
+            const x = ((i * 17) % 23) / 23 * w - w / 2;
+            const y = ((i * 31) % 61) / 61 * h - h / 2;
+            ctx.fillRect(x, y, 2, 2);
+          }
+          ctx.restore();
+        }
+
+        function drawSauce(item) {
+          ctx.save();
+          ctx.translate(item.x, item.y);
+          ctx.rotate(item.rotation);
+          ctx.shadowColor = "rgba(0,0,0,.5)";
+          ctx.shadowBlur = 10;
+          ctx.shadowOffsetY = 6;
+          ctx.fillStyle = "#fff6e8";
+          ctx.beginPath();
+          ctx.ellipse(0, 0, 29, 22, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.lineWidth = 5;
+          ctx.strokeStyle = "#f12d20";
+          ctx.stroke();
+          ctx.shadowColor = "transparent";
+          ctx.fillStyle = "#f4a04a";
+          ctx.beginPath();
+          ctx.ellipse(0, -2, 21, 13, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#fff";
+          ctx.font = "900 15px Arial";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText("S", 0, 0);
+          ctx.restore();
+        }
+
+        function drawPepper(item) {
+          ctx.save();
+          ctx.translate(item.x, item.y);
+          ctx.rotate(item.rotation);
+          ctx.shadowColor = "rgba(255,20,10,.55)";
+          ctx.shadowBlur = 16;
+          ctx.fillStyle = "#e4261d";
+          ctx.strokeStyle = "#6f0906";
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.moveTo(-4, -28);
+          ctx.bezierCurveTo(30, -25, 34, 0, 18, 17);
+          ctx.bezierCurveTo(8, 30, -14, 36, -26, 32);
+          ctx.bezierCurveTo(-5, 22, 4, 5, -4, -28);
+          ctx.fill();
+          ctx.stroke();
+          ctx.shadowColor = "transparent";
+          ctx.strokeStyle = "#9d7d1b";
+          ctx.lineWidth = 5;
+          ctx.beginPath();
+          ctx.moveTo(-3, -28);
+          ctx.quadraticCurveTo(-12, -39, -2, -46);
+          ctx.stroke();
+          ctx.fillStyle = "#111";
+          ctx.beginPath();
+          ctx.arc(-4, -1, 4, 0, Math.PI * 2);
+          ctx.arc(11, 0, 4, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+
+        function drawBag() {
+          ctx.save();
+          ctx.translate(bagX, H - 75);
+          ctx.rotate((bagVelocity / 580) * .045);
+          const pulse = catchPulse > 0 ? 1 + catchPulse * .7 : 1;
+          ctx.scale(pulse, 1 / pulse);
+          ctx.shadowColor = "rgba(0,0,0,.65)";
+          ctx.shadowBlur = 16;
+          ctx.shadowOffsetY = 10;
+          ctx.beginPath();
+          ctx.moveTo(-67, -62);
+          ctx.lineTo(67, -62);
+          ctx.lineTo(57, 62);
+          ctx.lineTo(-57, 62);
+          ctx.closePath();
+          const grad = ctx.createLinearGradient(-65, 0, 65, 0);
+          grad.addColorStop(0, "#b60f0a");
+          grad.addColorStop(.5, "#f33527");
+          grad.addColorStop(1, "#a70e09");
+          ctx.fillStyle = grad;
+          ctx.fill();
+          ctx.strokeStyle = "#690906";
+          ctx.lineWidth = 4;
+          ctx.stroke();
+          ctx.shadowColor = "transparent";
+
+          ctx.fillStyle = "#fff3df";
+          ctx.beginPath();
+          ctx.moveTo(-58, -22);
+          ctx.lineTo(-15, -48);
+          ctx.lineTo(-29, -10);
+          ctx.lineTo(8, -38);
+          ctx.lineTo(-1, 3);
+          ctx.lineTo(43, -25);
+          ctx.lineTo(16, 24);
+          ctx.lineTo(-22, 6);
+          ctx.closePath();
+          ctx.fill();
+
+          const checkerY = 35;
+          for (let row = 0; row < 2; row++) {
+            for (let col = 0; col < 8; col++) {
+              if ((row + col) % 2 === 0) {
+                ctx.fillStyle = "#fff3df";
+                ctx.fillRect(-56 + col * 14, checkerY + row * 13, 14, 13);
+              }
+            }
+          }
+
+          ctx.fillStyle = "#8e0d08";
+          ctx.beginPath();
+          ctx.ellipse(0, -61, 68, 13, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = "#fff3df";
+          ctx.lineWidth = 4;
+          ctx.stroke();
+          ctx.fillStyle = "#3b130e";
+          ctx.beginPath();
+          ctx.ellipse(0, -60, 55, 8, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+
+        function draw() {
+          const sx = shake > 0 ? (Math.random() - .5) * shake * 30 : 0;
+          const sy = shake > 0 ? (Math.random() - .5) * shake * 22 : 0;
+          ctx.save();
+          ctx.translate(sx, sy);
+          drawBackground();
+
+          items.forEach(item => {
+            if (item.warning > 0) {
+              ctx.save();
+              ctx.globalAlpha = .55 + Math.sin(performance.now() * .025) * .25;
+              ctx.fillStyle = item.type === "pepper" ? "#f12d20" : "#ffd532";
+              ctx.beginPath();
+              ctx.moveTo(item.x, 10);
+              ctx.lineTo(item.x - 13, 32);
+              ctx.lineTo(item.x + 13, 32);
+              ctx.closePath();
+              ctx.fill();
+              ctx.restore();
+              return;
+            }
+            if (item.type === "fry" || item.type === "gold") drawFry(item);
+            else if (item.type === "sauce") drawSauce(item);
+            else drawPepper(item);
+          });
+
+          particles.forEach(p => {
+            ctx.save();
+            ctx.globalAlpha = Math.max(0, p.life / p.max);
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.x * .02);
+            ctx.fillStyle = p.color;
+            ctx.fillRect(-p.size / 2, -p.size / 5, p.size, p.size * .4);
+            ctx.restore();
+          });
+
+          if (state === "playing" || state === "lost") drawBag();
+
+          popups.forEach(p => {
+            ctx.save();
+            ctx.globalAlpha = Math.min(1, (p.life / p.max) * 1.8);
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.font = `900 ${p.size}px Impact, Arial Black, sans-serif`;
+            ctx.lineWidth = 7;
+            ctx.strokeStyle = "rgba(0,0,0,.78)";
+            ctx.strokeText(p.text, p.x, p.y);
+            ctx.fillStyle = p.color;
+            ctx.fillText(p.text, p.x, p.y);
+            ctx.restore();
+          });
+
+          const vignette = ctx.createRadialGradient(W / 2, H / 2, 210, W / 2, H / 2, 590);
+          vignette.addColorStop(0, "rgba(0,0,0,0)");
+          vignette.addColorStop(1, "rgba(0,0,0,.56)");
+          ctx.fillStyle = vignette;
+          ctx.fillRect(0, 0, W, H);
+          ctx.restore();
+        }
+
+        function loop(timestamp) {
+          if (!lastTime) lastTime = timestamp;
+          const dt = Math.min(.033, (timestamp - lastTime) / 1000);
+          lastTime = timestamp;
+          if (state === "playing") update(dt);
+          draw();
+          requestAnimationFrame(loop);
+        }
+
+        document.getElementById("start-button").addEventListener("click", resetGame);
+        document.querySelectorAll(".restart").forEach(button => button.addEventListener("click", resetGame));
+        document.querySelectorAll(".home").forEach(button => button.addEventListener("click", showMenu));
+
+        addEventListener("keydown", event => {
+          const key = event.key.toLowerCase();
+          if (key === "a" || event.key === "ArrowLeft") {
+            event.preventDefault();
+            keys.left = true;
+          }
+          if (key === "d" || event.key === "ArrowRight") {
+            event.preventDefault();
+            keys.right = true;
+          }
+          if (key === "m") {
+            muted = !muted;
+            localStorage.setItem("daves-fry-mvp-muted", muted);
+            if (audio) audio.master.gain.setTargetAtTime(muted ? 0 : .08, audio.context.currentTime, .02);
+          }
+          if (event.key === "Enter" && state === "menu") resetGame();
+          if (event.key === "Enter" && state === "lost") resetGame();
+        }, { passive: false });
+
+        addEventListener("keyup", event => {
+          const key = event.key.toLowerCase();
+          if (key === "a" || event.key === "ArrowLeft") keys.left = false;
+          if (key === "d" || event.key === "ArrowRight") keys.right = false;
+        });
+
+        draw();
+        requestAnimationFrame(loop);
+      })();
+    </script>
+  </body>
+</html>
